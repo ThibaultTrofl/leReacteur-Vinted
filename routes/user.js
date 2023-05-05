@@ -20,7 +20,7 @@ router.post("/user/signup", fileUpload(), async (req, res) => {
       return res.json({ message: "Please fill an avatar image" });
     }
     let newUser = new User({
-      account: { username: req.body.username },
+      account: { username: req.body.username, avatar: req.files.avatar },
       email: req.body.email,
       password: req.body.password,
       newsletter: req.body.newsletter,
@@ -33,7 +33,7 @@ router.post("/user/signup", fileUpload(), async (req, res) => {
       }
     );
 
-    newUser.account.picture = urlPicture.secure_url;
+    newUser.account.avatar = urlPicture;
 
     const token = uid2(16);
     newUser.token = token;
