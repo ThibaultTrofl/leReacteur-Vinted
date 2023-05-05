@@ -16,9 +16,10 @@ router.post("/user/signup", fileUpload(), async (req, res) => {
       return res.json({ message: "This mail is already link to an account" });
     } else if (!username) {
       return res.json({ message: "Please fill the username case" });
-    } else if (!req.files) {
-      return res.json({ message: "Please fill an avatar image" });
     }
+    // else if (!req.files) {
+    //   return res.json({ message: "Please fill an avatar image" });
+    // }
     let newUser = new User({
       account: { username: req.body.username },
       email: req.body.email,
@@ -27,7 +28,7 @@ router.post("/user/signup", fileUpload(), async (req, res) => {
     });
 
     const urlPicture = await cloudinary.uploader.upload(
-      convertToBase64(req.files.picture),
+      convertToBase64(req.files.avatar),
       {
         folder: `/Vinted/user/${newUser._id}`,
       }
