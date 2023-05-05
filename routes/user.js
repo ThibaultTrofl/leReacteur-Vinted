@@ -6,7 +6,7 @@ const encBase64 = require("crypto-js/enc-base64");
 const uid2 = require("uid2");
 const fileUpload = require("express-fileupload");
 const convertToBase64 = require("../utils/convertToBase64");
-const cloudinary = require("cloudinary");
+const cloudinary = require("cloudinary").v2;
 
 router.post("/user/signup", fileUpload(), async (req, res) => {
   try {
@@ -20,7 +20,7 @@ router.post("/user/signup", fileUpload(), async (req, res) => {
       return res.json({ message: "Please fill an avatar image" });
     }
     let newUser = new User({
-      account: { username: req.body.username, avatar: req.files.avatar },
+      account: { username: req.body.username },
       email: req.body.email,
       password: req.body.password,
       newsletter: req.body.newsletter,
