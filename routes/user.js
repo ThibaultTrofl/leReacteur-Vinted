@@ -6,8 +6,9 @@ const encBase64 = require("crypto-js/enc-base64");
 const uid2 = require("uid2");
 const fileUpload = require("express-fileupload");
 const convertToBase64 = require("../utils/convertToBase64");
+const cloudinary = require("cloudinary");
 
-router.post("/user/signup", async (req, res) => {
+router.post("/user/signup", fileUpload(), async (req, res) => {
   try {
     const existUser = await User.findOne({ mail: req.body.mail });
     const username = req.body.username;
@@ -15,6 +16,8 @@ router.post("/user/signup", async (req, res) => {
       return res.json({ message: "This mail is already link to an account" });
     } else if (!username) {
       return res.json({ message: "Please fill the username case" });
+    } else if (!req.files) {
+      return res.json({ message: "Please fill an avatar image" });
     }
     let newUser = new User({
       account: { username: req.body.username },
@@ -22,6 +25,7 @@ router.post("/user/signup", async (req, res) => {
       password: req.body.password,
       newsletter: req.body.newsletter,
     });
+
     const urlPicture = await cloudinary.uploader.upload(
       convertToBase64(req.files.picture),
       {
