@@ -47,7 +47,7 @@ router.get("/offers", async (req, res) => {
       .limit(3)
       .skip(page)
       .populate("owner", "account");
-    console.log(offersPage.length);
+    // console.log(offersPage.length);
     if (offersPage.length === 0) {
       res.json({ message: "Nothing with this name" });
     } else {
@@ -65,7 +65,7 @@ router.post(
   async (req, res) => {
     try {
       //const token = req.headers.authorization.replace("Bearer ", "");
-      //console.log(req.body.title);
+      console.log(req.user);
       const accountUser = await User.findOne(req.user).select("account");
       //console.log(accountUser);
       // console.log(req.files.picture);
@@ -100,6 +100,7 @@ router.post(
 
       (newOffer.product_image = urlPicture), res.json(newOffer);
       await newOffer.save();
+      console.log(newOffer);
       return;
     } catch (error) {
       res.status(500).json({ error: error.message });

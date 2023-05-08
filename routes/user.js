@@ -10,31 +10,37 @@ const cloudinary = require("cloudinary").v2;
 
 router.post("/user/signup", fileUpload(), async (req, res) => {
   try {
-    const existUser = await User.findOne({ mail: req.body.mail });
-    const username = req.body.username;
+    // console.log(req.body.account.username);
+    const existUser = await User.findOne({ email: req.body.email });
+    console.log(existUser);
+
+    const username = req.body.account.username;
+    // console.log(username);
     if (existUser) {
       return res.json({ message: "This mail is already link to an account" });
     } else if (!username) {
       return res.json({ message: "Please fill the username case" });
     }
-    // else if (!req.files) {
-    //   return res.json({ message: "Please fill an avatar image" });
-    // }
+    // console.log(req.body.account.username);
     let newUser = new User({
-      account: { username: req.body.username },
+      account: { username: username },
       email: req.body.email,
       password: req.body.password,
       newsletter: req.body.newsletter,
     });
 
-    const urlPicture = await cloudinary.uploader.upload(
-      convertToBase64(req.files.avatar),
-      {
-        folder: `/Vinted/user/${newUser._id}`,
-      }
-    );
+    const filePresent = req.files;
 
-    newUser.account.avatar = urlPicture;
+    if (filePresent) {
+      const urlPicture = await cloudinary.uploader.upload(
+        convertToBase64(req.files.avatar),
+        {
+          folder: `/Vinted/user/${newUser._id}`,
+        }
+      );
+
+      newUser.account.avatar = urlPicture;
+    }
 
     const token = uid2(16);
     newUser.token = token;
@@ -43,7 +49,7 @@ router.post("/user/signup", fileUpload(), async (req, res) => {
     const hash = SHA256(req.body.password + salt).toString(encBase64);
     newUser.hash = hash;
     await newUser.save();
-    const result = await User.findOne({ mail: req.body.mail }).select(
+    const result = await User.findOne({ email: req.body.email }).select(
       `-email -newsletter -hash -salt -__v`
     );
 
@@ -55,15 +61,16 @@ router.post("/user/signup", fileUpload(), async (req, res) => {
 
 router.post("/user/login", async (req, res) => {
   try {
-    // console.log(req.body.email);
+    console.log(req.body);
     if (!req.body.email || !req.body.password) {
       return res.json({ message: "Please fill cases" });
     }
 
     const currentUser = await User.findOne({ email: req.body.email });
+    console.log(currentUser);
     if (!currentUser) {
       return res.json({
-        message: "This mail is not already link to an account",
+        message: "Sorry, I can't find your account.",
       });
     }
     const hash = SHA256(req.body.password + currentUser.salt).toString(
@@ -73,7 +80,7 @@ router.post("/user/login", async (req, res) => {
     console.log(currentUser.hash);
     if (hash !== currentUser.hash) {
       res.json({
-        message: "Wrong password",
+        message: "Sorry, I can't find your account.",
       });
     } else if (hash === currentUser.hash) {
       const result = await User.findOne({ email: req.body.email }).select(
@@ -81,7 +88,6 @@ router.post("/user/login", async (req, res) => {
       );
       res.json(result);
     }
-    res.json("fin");
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
