@@ -7,9 +7,7 @@ const isAuthenticated = require("../middlewares/isAuthenticated");
 const cloudinary = require("cloudinary").v2;
 const convertToBase64 = require("../utils/convertToBase64");
 
-const stripe = require("stripe")(
-  "sk_test_51N5sWrEP7RE31YxqwqUoKGcFKSmfZaaPhYmtqF76G9zR8CN2atBlKelEpFGdfdoM34wGEKDLVE0goGEzHurfVcIk00JWycFKI2"
-);
+const stripe = require("stripe")(process.env.STRIPE_API_SECRET);
 
 const app = express();
 app.use(express.json());
@@ -128,7 +126,7 @@ router.post(
 
 router.get("/offer/:_id", async (req, res) => {
   try {
-    console.log(req.params._id);
+    // console.log(req.params._id);
     const offer = await Offer.findById(req.params).populate("owner", "account");
 
     res.json(offer);
@@ -137,17 +135,19 @@ router.get("/offer/:_id", async (req, res) => {
   }
 });
 
-router.post("/offer/:id/payment", async (req, res) => {
+router.post("/offer/:id/payment/", async (req, res) => {
   try {
+    console.log("body  " + req.body);
     const stripeToken = req.body.stripeToken;
 
     const response = await stripe.charges.create({
-      amount: 1000,
+      amount: req.body.price,
       currency: "eur",
-      description: "Lorem",
+      description: req.body.title,
       source: stripeToken,
     });
-    console.log(response.status);
+    res.json(response);
+    // console.log(response.status);
   } catch (error) {
     res.json({ message: error.message });
   }

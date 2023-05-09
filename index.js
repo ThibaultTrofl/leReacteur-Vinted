@@ -15,9 +15,9 @@ const userRoutes = require("./routes/user");
 const offerRoutes = require("./routes/offer");
 
 cloudinary.config({
-  cloud_name: "duece10x0",
-  api_key: "135232731799522",
-  api_secret: "ShF2yPy5nuRTaX_5nAVmy9zlLrY",
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
   secure: true,
 });
 

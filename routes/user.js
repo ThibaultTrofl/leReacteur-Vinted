@@ -9,11 +9,11 @@ const convertToBase64 = require("../utils/convertToBase64");
 const isAuthenticated = require("../middlewares/isAuthenticated");
 const cloudinary = require("cloudinary").v2;
 
-router.post("/user/:token", isAuthenticated, async (req, res) => {
+router.get("/user/:token", async (req, res) => {
   try {
-    console.log(req.params.token);
+    // console.log("token : " + req.params.token);
     const userPage = await User.findOne({ token: req.params.token });
-    console.log(userPage._id);
+    // console.log(userPage._id);
     return res.json(userPage._id);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -24,7 +24,7 @@ router.post("/user/signup", fileUpload(), async (req, res) => {
   try {
     // console.log(req.body.account.username);
     const existUser = await User.findOne({ email: req.body.email });
-    console.log(existUser);
+    // console.log(existUser);
 
     const username = req.body.account.username;
     // console.log(username);
@@ -73,13 +73,13 @@ router.post("/user/signup", fileUpload(), async (req, res) => {
 
 router.post("/user/login", async (req, res) => {
   try {
-    console.log(req.body);
+    // console.log(req.body);
     if (!req.body.email || !req.body.password) {
       return res.json({ message: "Please fill cases" });
     }
 
     const currentUser = await User.findOne({ email: req.body.email });
-    console.log(currentUser);
+    // console.log(currentUser);
     if (!currentUser) {
       return res.json({
         message: "Sorry, I can't find your account.",
@@ -88,8 +88,8 @@ router.post("/user/login", async (req, res) => {
     const hash = SHA256(req.body.password + currentUser.salt).toString(
       encBase64
     );
-    console.log(hash);
-    console.log(currentUser.hash);
+    // console.log(hash);
+    // console.log(currentUser.hash);
     if (hash !== currentUser.hash) {
       res.json({
         message: "Sorry, I can't find your account.",
