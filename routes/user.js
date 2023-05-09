@@ -6,7 +6,19 @@ const encBase64 = require("crypto-js/enc-base64");
 const uid2 = require("uid2");
 const fileUpload = require("express-fileupload");
 const convertToBase64 = require("../utils/convertToBase64");
+const isAuthenticated = require("../middlewares/isAuthenticated");
 const cloudinary = require("cloudinary").v2;
+
+router.post("/user/:token", isAuthenticated, async (req, res) => {
+  try {
+    console.log(req.params.token);
+    const userPage = await User.findOne({ token: req.params.token });
+    console.log(userPage._id);
+    return res.json(userPage._id);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 router.post("/user/signup", fileUpload(), async (req, res) => {
   try {

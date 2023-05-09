@@ -7,33 +7,45 @@ const isAuthenticated = require("../middlewares/isAuthenticated");
 const cloudinary = require("cloudinary").v2;
 const convertToBase64 = require("../utils/convertToBase64");
 
+const stripe = require("stripe")(
+  "sk_test_51N5sWrEP7RE31YxqwqUoKGcFKSmfZaaPhYmtqF76G9zR8CN2atBlKelEpFGdfdoM34wGEKDLVE0goGEzHurfVcIk00JWycFKI2"
+);
+
 const app = express();
 app.use(express.json());
 
 router.get("/offers", async (req, res) => {
   try {
-    //console.log(Object.keys(req.query).length);
+    // console.log(req.body);
+    // console.log(req.query);
+    // console.log(Object.keys(req.query).length);
     if (Object.keys(req.query).length === 0) {
-      const offersPage = await Offer.find();
+      const offersPage = await Offer.find().populate("owner", "account");
+      // console.log("test1");
+      // console.log(req.body);
       return res.json(offersPage);
     }
 
     let page = 0;
     if (typeof Number(req.query.page) === "number") {
       page = (req.query.page - 1) * 3;
+      // console.log("test2");
     }
     let prixMax = 100000;
     if (Number(req.query.priceMax) < 100000 && Number(req.query.priceMax) > 0) {
       prixMax = Number(req.query.priceMax);
+      // console.log("test3");
     }
     let prixMin = 0;
     if (Number(req.query.priceMin) > 0 && Number(req.query.priceMin) < 100000) {
       prixMin = Number(req.query.priceMin);
+      // console.log("test4");
     }
     let numberSort = 1;
     //console.log(prixMin, prixMax);
     if (req.query.sort === "price-desc") {
       numberSort = -1;
+      // console.log("test5");
     }
 
     //
@@ -44,13 +56,16 @@ router.get("/offers", async (req, res) => {
       product_price: { $lte: prixMax, $gte: prixMin },
     })
       .sort({ product_price: numberSort })
-      .limit(3)
-      .skip(page)
+      // .limit(30)
+      // .skip(page)
       .populate("owner", "account");
-    // console.log(offersPage.length);
+    // console.log(offersPage);
+    // console.log("test6");
     if (offersPage.length === 0) {
       res.json({ message: "Nothing with this name" });
     } else {
+      // console.log("test7");
+      // console.log(offersPage);
       res.json(offersPage);
     }
   } catch (error) {
@@ -65,10 +80,11 @@ router.post(
   async (req, res) => {
     try {
       //const token = req.headers.authorization.replace("Bearer ", "");
-      console.log(req.user);
+      // console.log("req.body " + req.body);
       const accountUser = await User.findOne(req.user).select("account");
       //console.log(accountUser);
       // console.log(req.files.picture);
+      // console.log("req.body 2" + req.body);
       if (
         req.body.title.length > 50 ||
         req.body.description.length > 500 ||
@@ -76,7 +92,7 @@ router.post(
       ) {
         return res.json({ message: "Wrong parameters" });
       }
-
+      // console.log("req.body " + req.body);
       const newOffer = await new Offer({
         product_name: req.body.title,
         product_description: req.body.description,
@@ -90,18 +106,20 @@ router.post(
         ],
         owner: accountUser,
       });
+      // console.log(req);
       const picture = await cloudinary.uploader.upload(
         convertToBase64(req.files.picture),
         {
           folder: `/Vinted/offers/${newOffer._id}`,
         }
       );
+      // console.log("url " + newOffer);
       const urlPicture = picture.secure_url;
 
       (newOffer.product_image = urlPicture), res.json(newOffer);
       await newOffer.save();
-      console.log(newOffer);
-      return;
+      console.log(newOffer._id);
+      return newOffer._id;
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
@@ -114,6 +132,22 @@ router.get("/offer/:_id", async (req, res) => {
     const offer = await Offer.findById(req.params).populate("owner", "account");
 
     res.json(offer);
+  } catch (error) {
+    res.json({ message: error.message });
+  }
+});
+
+router.post("/offer/:id/payment", async (req, res) => {
+  try {
+    const stripeToken = req.body.stripeToken;
+
+    const response = await stripe.charges.create({
+      amount: 1000,
+      currency: "eur",
+      description: "Lorem",
+      source: stripeToken,
+    });
+    console.log(response.status);
   } catch (error) {
     res.json({ message: error.message });
   }
